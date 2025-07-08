@@ -1,5 +1,3 @@
-import { create } from "zustand";
-import { combine } from "zustand/middleware";
 import { useCounterStore } from "./store/CounterStore";
 function App() {
   const { count, increment, decrement } = useCounterStore();
