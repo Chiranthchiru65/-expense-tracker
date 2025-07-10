@@ -4,7 +4,7 @@ interface NavBarProps {
 
 function NavBar({ title }: NavBarProps) {
   return (
-    <nav className="p-4 bg-blue-500 text-white">
+    <nav className="p-4 border">
       <h1 className="text-xl font-bold">{title}</h1>
     </nav>
   );
