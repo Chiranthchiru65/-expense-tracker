@@ -1,6 +1,6 @@
 type Currency = "INR" | "USD" | "EUR";
 
-interface Transaction {
+interface Expense {
   id: string;
   title: string;
   amount: number;
@@ -14,7 +14,7 @@ interface Transaction {
   createdAt: string;
 }
 
-export const dummyData: Transaction[] = [
+export const dummyData: Expense[] = [
   {
     id: "1",
     title: "Lunch at Pizza Hut",

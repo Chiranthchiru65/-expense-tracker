@@ -1,14 +1,19 @@
+export type Currency = "INR" | "USD" | "EUR";
+
 export interface Expense {
   id: string;
   title: string;
   amount: number;
-  currency: string;
+  currency: Currency;
   paymentMode: string;
+  convertedAmount?: number;
   category: string;
+  icon: string;
   notes: string;
   date: string;
   createdAt: string;
 }
+
 export const getAllExpenses = async (): Promise<Expense[]> => {
   try {
     const response = await fetch("http://127.0.0.1:3001/expenses");

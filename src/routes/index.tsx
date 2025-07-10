@@ -1,11 +1,47 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { dummyData } from "@/assets/dummyData";
+
 import RecentTransactions from "@/components/recentTransactions/recentTransactions";
+import { getAllExpenses } from "@/services/expenseServices";
+import type { Expense } from "@/services/expenseServices";
+
+import { useState, useEffect } from "react";
+import CustomPieChart from "@/components/charts/customPieChart";
 export const Route = createFileRoute("/")({
   component: DashboardHome,
 });
 
 function DashboardHome() {
+  const [allExpenses, setAllExpenses] = useState<Expense[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const balance = 8000;
+  const income = 2000;
+  const expense = 3000;
+
+  const COLORS = ["#875CF5", "#FA2C37", "#FF6900"];
+
+  const balanceData = [
+    { name: "Total Balance", amount: balance },
+    { name: "Total Expense", amount: income },
+    { name: "Total Income", amount: expense },
+  ];
+  useEffect(() => {
+    const fetchExpenses = async () => {
+      try {
+        setIsLoading(true);
+        const expenses = await getAllExpenses(); // ← await the Promise
+        console.log(expenses); // ← Now you get actual data
+        setAllExpenses(expenses);
+      } catch (error) {
+        console.error("Failed to fetch expenses:", error);
+      } finally {
+        setIsLoading(true);
+      }
+    };
+
+    fetchExpenses();
+  }, []);
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -47,7 +83,7 @@ function DashboardHome() {
       </div>
       <div className="flex w-full gap-6 min-h-[30rem]">
         <RecentTransactions
-          transactions={dummyData}
+          transactions={allExpenses}
           title="Recent Transactions"
         />
         <div className="bg-white rounded-lg shadow-sm border w-1/2 ">
@@ -56,7 +92,12 @@ function DashboardHome() {
               Financial Overview
             </h2>
           </div>
-          <p className="p-6">pie chart will go here</p>
+          <CustomPieChart
+            data={balanceData}
+            label="Total Balance"
+            totalAmount={balance}
+            colors={COLORS}
+          />
         </div>
       </div>
     </div>
