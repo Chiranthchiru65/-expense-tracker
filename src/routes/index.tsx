@@ -81,7 +81,7 @@ function DashboardHome() {
           </div>
         </div>
       </div>
-      <div className="flex w-full gap-6 min-h-[30rem]">
+      <div className="flex w-full gap-6 max-h-[30rem]">
         <RecentTransactions
           transactions={allExpenses}
           title="Recent Transactions"

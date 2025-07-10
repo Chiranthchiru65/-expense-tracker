@@ -48,19 +48,29 @@ const RecentTransactions: React.FC<RecentTransactionProps> = ({
   };
 
   const formatAmount = (amount: number, currency: Currency): string => {
-    const currencySymbols: Record<Currency, string> = {
-      INR: "₹",
-      USD: "$",
-      EUR: "€",
+    // Define currency symbols for supported currencies
+    const getCurrencySymbol = (currencyCode: Currency): string => {
+      switch (currencyCode) {
+        case "INR":
+          return "₹";
+        case "USD":
+          return "$";
+        case "EUR":
+          return "€";
+        default:
+          return currencyCode; // fallback to currency code
+      }
     };
 
-    const symbol = currencySymbols[currency];
-    return `${symbol}${amount.toLocaleString()}`;
+    const currencySymbol = getCurrencySymbol(currency);
+    const formattedNumber = amount.toLocaleString();
+
+    return `${currencySymbol}${formattedNumber}`;
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border w-1/2">
-      <div className="px-6 pt-6 ">
+    <div className="bg-white rounded-lg shadow-sm border w-1/2 flex flex-col max-h-[30rem]">
+      <div className="px-6 pt-6 flex-shrink-0">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
 
@@ -75,8 +85,8 @@ const RecentTransactions: React.FC<RecentTransactionProps> = ({
         </div>
       </div>
 
-      <div className="p-6">
-        <div className="space-y-4">
+      <div className="p-6 flex-1 overflow-y-auto">
+        <div className="space-y-2">
           {transactions.map((transaction) => (
             <div
               key={transaction.id}
