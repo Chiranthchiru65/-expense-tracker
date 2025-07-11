@@ -1,18 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import RecentTransactions from "@/components/recentTransactions/recentTransactions";
-import { getAllExpenses } from "@/services/expenseServices";
-import type { Expense } from "@/services/expenseServices";
+// import { getAllExpenses } from "@/services/expenseServices";
+// import type { Expense } from "@/services/expenseServices";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import CustomPieChart from "@/components/charts/customPieChart";
+import useExpenseStore from "@/store/expenseStore";
 export const Route = createFileRoute("/")({
   component: DashboardHome,
 });
 
 function DashboardHome() {
-  const [allExpenses, setAllExpenses] = useState<Expense[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  // const [allExpenses, setAllExpenses] = useState<Expense[]>([]);
+  // const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { expenses, fetchExpenses } = useExpenseStore();
 
   const balance = 8000;
   const income = 2000;
@@ -25,22 +27,25 @@ function DashboardHome() {
     { name: "Total Expense", amount: income },
     { name: "Total Income", amount: expense },
   ];
-  useEffect(() => {
-    const fetchExpenses = async () => {
-      try {
-        setIsLoading(true);
-        const expenses = await getAllExpenses(); // ← await the Promise
-        console.log(expenses); // ← Now you get actual data
-        setAllExpenses(expenses);
-      } catch (error) {
-        console.error("Failed to fetch expenses:", error);
-      } finally {
-        setIsLoading(true);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchExpenses = async () => {
+  //     try {
+  //       setIsLoading(true);
+  //       const expenses = await getAllExpenses(); // ← await the Promise
+  //       console.log(expenses); // ← Now you get actual data
+  //       setAllExpenses(expenses);
+  //     } catch (error) {
+  //       console.error("Failed to fetch expenses:", error);
+  //     } finally {
+  //       setIsLoading(true);
+  //     }
+  //   };
 
+  //   fetchExpenses();
+  // }, []);
+  useEffect(() => {
     fetchExpenses();
-  }, []);
+  }, [fetchExpenses]);
 
   return (
     <div className="space-y-6">
@@ -83,7 +88,7 @@ function DashboardHome() {
       </div>
       <div className="flex w-full gap-6 max-h-[30rem]">
         <RecentTransactions
-          transactions={allExpenses}
+          transactions={expenses}
           title="Recent Transactions"
         />
         <div className="bg-white rounded-lg shadow-sm border w-1/2 ">

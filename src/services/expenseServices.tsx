@@ -27,3 +27,31 @@ export const getAllExpenses = async (): Promise<Expense[]> => {
     throw err;
   }
 };
+
+export const createExpense = async (
+  payload: Omit<Expense, "id" | "createdAt">
+): Promise<Expense> => {
+  try {
+    const expenseData = {
+      ...payload,
+      createdAt: new Date().toISOString(),
+    };
+    const response = await fetch("http://localhost:3001/expenses", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(expenseData),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error creating expense: ${response.status}`);
+    }
+
+    const createdExpense: Expense = await response.json();
+    return createdExpense;
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
+};
