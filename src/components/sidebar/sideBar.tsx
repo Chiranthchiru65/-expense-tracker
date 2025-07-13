@@ -16,13 +16,13 @@ function SideBar({}: NavBarProps) {
           <span>Dashboard</span>
         </Link>
 
-        <Link
+        {/* <Link
           to="/income"
           className="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 [&.active]:bg-blue-600 [&.active]:text-white"
         >
           <span>💰</span>
           <span>Income</span>
-        </Link>
+        </Link> */}
 
         <Link
           to="/expense"

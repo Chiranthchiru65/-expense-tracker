@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -41,6 +41,7 @@ interface ExpenseFormData {
   icon: string;
   notes: string;
   date: Date;
+  convertedAmount?: number;
 }
 
 const categories = [
@@ -67,6 +68,9 @@ const AddExpense: React.FC = () => {
   const [selectedCurrency, setSelectedCurrency] =
     React.useState<Currency>("INR");
 
+  const [showCustomCategory, setShowCustomCategory] = React.useState(false);
+  const [customCategory, setCustomCategory] = React.useState("");
+  const shouldShowConversion = selectedCurrency !== "INR";
   const { register, handleSubmit, reset, setValue, watch } =
     useForm<ExpenseFormData>({
       defaultValues: {
@@ -78,6 +82,7 @@ const AddExpense: React.FC = () => {
         icon: "",
         notes: "",
         date: new Date(),
+        convertedAmount: undefined,
       },
     });
 
@@ -90,8 +95,10 @@ const AddExpense: React.FC = () => {
     );
     if (selectedCategoryData) {
       setValue("icon", selectedCategoryData.icon);
+    } else if (showCustomCategory && customCategory) {
+      setValue("icon", "📦");
     }
-  }, [watchCategory, setValue]);
+  }, [watchCategory, setValue, showCustomCategory, customCategory]);
 
   // update currency in form when tab changes
   React.useEffect(() => {
@@ -109,6 +116,10 @@ const AddExpense: React.FC = () => {
         ...data,
         date: data.date.toISOString(),
         amount: Number(data.amount),
+        ...(shouldShowConversion &&
+          data.convertedAmount && {
+            convertedAmount: Number(data.convertedAmount),
+          }),
       };
 
       await addExpense(expenseData);
@@ -116,6 +127,8 @@ const AddExpense: React.FC = () => {
       reset();
       setSelectedDate(new Date());
       setSelectedCurrency("INR");
+      setShowCustomCategory(false);
+      setCustomCategory("");
       toast.success("expense added successfully!");
     } catch (error) {
       toast.error("failed to add expense. please try again.");
@@ -127,6 +140,20 @@ const AddExpense: React.FC = () => {
     setSelectedDate(new Date());
     setSelectedCurrency("INR");
     closeAddModal();
+    setShowCustomCategory(false);
+    setCustomCategory("");
+  };
+
+  const handleCategoryChange = (value: string) => {
+    setValue("category", value);
+
+    if (value === "Others") {
+      setShowCustomCategory(true);
+      setValue("category", "");
+    } else {
+      setShowCustomCategory(false);
+      setCustomCategory("");
+    }
   };
 
   return (
@@ -158,6 +185,26 @@ const AddExpense: React.FC = () => {
             />
           </div>
 
+          {shouldShowConversion && (
+            <div className="space-y-2">
+              <Label htmlFor="convertedAmount">Amount in INR</Label>
+              <Input
+                id="convertedAmount"
+                type="number"
+                placeholder={`Enter amount in INR`}
+                step="0.01"
+                min="0"
+                {...register("convertedAmount", {
+                  required: shouldShowConversion,
+                  min: 0,
+                })}
+              />
+              <p className="text-xs text-gray-500">
+                Convert {selectedCurrency} amount to INR manually
+              </p>
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label>Currency</Label>
             <Tabs
@@ -183,7 +230,8 @@ const AddExpense: React.FC = () => {
 
           <div className="space-y-2">
             <Label>Category</Label>
-            <Select onValueChange={(value) => setValue("category", value)}>
+            {/* <Select onValueChange={(value) => setValue("category", value)}> */}
+            <Select onValueChange={handleCategoryChange}>
               <SelectTrigger>
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
@@ -199,7 +247,26 @@ const AddExpense: React.FC = () => {
               </SelectContent>
             </Select>
           </div>
-
+          {showCustomCategory && (
+            <div className="mt-2 space-y-2">
+              <Label htmlFor="customCategory">Custom Category</Label>
+              <Input
+                id="customCategory"
+                placeholder="Enter custom category name"
+                value={customCategory}
+                {...register("category", {
+                  required: true,
+                  onChange: (e) => {
+                    setCustomCategory(e.target.value);
+                    setValue("category", e.target.value);
+                  },
+                })}
+              />
+              <p className="text-xs text-gray-500">
+                Enter a name for your custom category
+              </p>
+            </div>
+          )}
           <div className="space-y-2">
             <Label>Date</Label>
             <Popover>
