@@ -22,7 +22,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-
+import EditExpense from "../editExpense.tsx/EditExpense";
 import useExpenseStore from "@/store/expenseStore";
 const columnHelper = createColumnHelper<Expense>();
 
@@ -40,11 +40,20 @@ const Table: React.FunctionComponent<TableProps> = ({ expenses }) => {
   const [expenseToDelete, setExpenseToDelete] = React.useState<Expense | null>(
     null
   );
-  const handleEdit = (id: string) => {
-    console.log("Edit expense:", id);
-    // TODO: Open edit modal or navigate to edit page
+
+  const [editModalOpen, setEditModalOpen] = React.useState(false);
+  const [expenseToEdit, setExpenseToEdit] = React.useState<Expense | null>(
+    null
+  );
+  const handleEdit = (expense: Expense) => {
+    setExpenseToEdit(expense);
+    setEditModalOpen(true);
   };
 
+  const handleEditClose = () => {
+    setEditModalOpen(false);
+    setExpenseToEdit(null);
+  };
   const handleDeleteClick = (expense: Expense) => {
     setExpenseToDelete(expense);
     setDeleteDialogOpen(true);
@@ -190,7 +199,7 @@ const Table: React.FunctionComponent<TableProps> = ({ expenses }) => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => handleEdit(info.row.original.id)}
+            onClick={() => handleEdit(info.row.original)}
             className="h-8 w-8 p-0 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
           >
             <Edit className="h-4 w-4" />
@@ -301,6 +310,11 @@ const Table: React.FunctionComponent<TableProps> = ({ expenses }) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <EditExpense
+        expense={expenseToEdit}
+        isOpen={editModalOpen}
+        onClose={handleEditClose}
+      />
     </div>
   );
 };

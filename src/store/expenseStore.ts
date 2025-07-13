@@ -3,6 +3,7 @@ import {
   getAllExpenses,
   createExpense,
   deleteExpense,
+  editExpense,
 } from "@/services/expenseServices";
 import type { Expense } from "@/services/expenseServices";
 
@@ -22,6 +23,10 @@ interface ExpenseStore {
   clearError: () => void;
   setLoading: (loading: boolean) => void;
   deleteExpense: (id: string) => Promise<void>;
+  editExpense: (
+    id: string,
+    expenseData: Omit<Expense, "id" | "createdAt">
+  ) => Promise<void>;
 }
 
 const useExpenseStore = create<ExpenseStore>((set, get) => ({
@@ -130,6 +135,30 @@ const useExpenseStore = create<ExpenseStore>((set, get) => ({
         isLoading: false,
         error:
           error instanceof Error ? error.message : "Failed to delete expense",
+      });
+      throw error;
+    }
+  },
+  editExpense: async (
+    id: string,
+    expenseData: Omit<Expense, "id" | "createdAt">
+  ) => {
+    try {
+      set({ isLoading: true, error: null });
+
+      const updatedExpense = await editExpense(id, expenseData);
+
+      set((state) => ({
+        expenses: state.expenses.map((expense) =>
+          expense.id === id ? updatedExpense : expense
+        ),
+        isLoading: false,
+      }));
+    } catch (error) {
+      set({
+        isLoading: false,
+        error:
+          error instanceof Error ? error.message : "Failed to update expense",
       });
       throw error;
     }
