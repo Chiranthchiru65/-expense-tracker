@@ -55,3 +55,45 @@ export const createExpense = async (
     throw err;
   }
 };
+
+export const editExpense = async (
+  id: string,
+  payload: Omit<Expense, "id" | "createdAt">
+): Promise<Expense> => {
+  try {
+    const response = await fetch(`http://localhost:3001/expenses/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error updating expense: ${response.status}`);
+    }
+
+    const updatedExpense: Expense = await response.json();
+    return updatedExpense;
+  } catch (err) {
+    console.error("Error editing expense:", err);
+    throw err;
+  }
+};
+
+export const deleteExpense = async (id: string): Promise<void> => {
+  try {
+    const response = await fetch(`http://localhost:3001/expenses/${id}`, {
+      method: "DELETE",
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error deleting expense: ${response.status}`);
+    }
+
+    return;
+  } catch (err) {
+    console.error("Error deleting expense:", err);
+    throw err;
+  }
+};

@@ -11,6 +11,19 @@ import { Edit, Trash2, ArrowUpDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { Expense } from "@/services/expenseServices";
 import { Button } from "../ui/button";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+import useExpenseStore from "@/store/expenseStore";
 const columnHelper = createColumnHelper<Expense>();
 
 interface TableProps {
@@ -21,17 +34,39 @@ const Table: React.FunctionComponent<TableProps> = ({ expenses }) => {
   const [sorting, setSorting] = React.useState<SortingState>([
     { id: "date", desc: true },
   ]);
+  const { deleteExpense } = useExpenseStore();
 
+  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
+  const [expenseToDelete, setExpenseToDelete] = React.useState<Expense | null>(
+    null
+  );
   const handleEdit = (id: string) => {
     console.log("Edit expense:", id);
     // TODO: Open edit modal or navigate to edit page
   };
 
-  const handleDelete = (id: string) => {
-    console.log("Delete expense:", id);
-    // TODO: Show confirmation dialog and delete
+  const handleDeleteClick = (expense: Expense) => {
+    setExpenseToDelete(expense);
+    setDeleteDialogOpen(true);
   };
 
+  const handleDeleteConfirm = async () => {
+    if (!expenseToDelete) return;
+
+    try {
+      await deleteExpense(expenseToDelete.id);
+      toast.success("Expense deleted successfully!");
+      setDeleteDialogOpen(false);
+      setExpenseToDelete(null);
+    } catch (error) {
+      toast.error("Failed to delete expense. Please try again.");
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setExpenseToDelete(null);
+  };
   const columns = [
     columnHelper.accessor("title", {
       header: ({ column }) => (
@@ -163,7 +198,7 @@ const Table: React.FunctionComponent<TableProps> = ({ expenses }) => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => handleDelete(info.row.original.id)}
+            onClick={() => handleDeleteClick(info.row.original)}
             className="h-8 w-8 p-0 text-red-600 hover:text-red-800 hover:bg-red-50"
           >
             <Trash2 className="h-4 w-4" />
@@ -244,6 +279,28 @@ const Table: React.FunctionComponent<TableProps> = ({ expenses }) => {
           </tbody>
         </table>
       </div>
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Expense</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{expenseToDelete?.title}"? This
+              action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleDeleteCancel}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

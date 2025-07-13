@@ -1,5 +1,9 @@
 import { create } from "zustand";
-import { getAllExpenses, createExpense } from "@/services/expenseServices";
+import {
+  getAllExpenses,
+  createExpense,
+  deleteExpense,
+} from "@/services/expenseServices";
 import type { Expense } from "@/services/expenseServices";
 
 interface ExpenseStore {
@@ -17,6 +21,7 @@ interface ExpenseStore {
   toggleAddModal: () => void;
   clearError: () => void;
   setLoading: (loading: boolean) => void;
+  deleteExpense: (id: string) => Promise<void>;
 }
 
 const useExpenseStore = create<ExpenseStore>((set, get) => ({
@@ -31,7 +36,7 @@ const useExpenseStore = create<ExpenseStore>((set, get) => ({
   fetchExpenses: async () => {
     const { isLoaded } = get();
 
-    // Return cached data if already loaded
+    // return cached data if already loaded
     if (isLoaded) {
       console.log("Using cached expense data");
       return;
@@ -106,6 +111,28 @@ const useExpenseStore = create<ExpenseStore>((set, get) => ({
 
   setLoading: (loading: boolean) => {
     set({ isLoading: loading });
+  },
+
+  deleteExpense: async (id: string) => {
+    try {
+      set({ isLoading: true, error: null });
+
+      set((state) => ({
+        expenses: state.expenses.filter((expense) => expense.id !== id),
+      }));
+
+      await deleteExpense(id);
+
+      set({ isLoading: false });
+    } catch (error) {
+      get().fetchExpenses();
+      set({
+        isLoading: false,
+        error:
+          error instanceof Error ? error.message : "Failed to delete expense",
+      });
+      throw error;
+    }
   },
 }));
 
