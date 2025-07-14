@@ -1,4 +1,3 @@
-// components/modals/AddExpense.tsx
 import React from "react";
 import { useForm } from "react-hook-form";
 import {
@@ -62,7 +61,7 @@ const categories = [
 ];
 
 const AddExpense: React.FC = () => {
-  const { isAddModalOpen, closeAddModal, addExpense, isLoading } =
+  const { isAddModalOpen, closeAddModal, addExpense, isLoading, expenses } =
     useExpenseStore();
   const [selectedDate, setSelectedDate] = React.useState<Date>(new Date());
   const [selectedCurrency, setSelectedCurrency] =
@@ -71,22 +70,55 @@ const AddExpense: React.FC = () => {
   const [showCustomCategory, setShowCustomCategory] = React.useState(false);
   const [customCategory, setCustomCategory] = React.useState("");
   const shouldShowConversion = selectedCurrency !== "INR";
-  const { register, handleSubmit, reset, setValue, watch } =
-    useForm<ExpenseFormData>({
-      defaultValues: {
-        title: "",
-        amount: undefined,
-        currency: "INR",
-        paymentMode: "",
-        category: "",
-        icon: "",
-        notes: "",
-        date: new Date(),
-        convertedAmount: undefined,
-      },
-    });
+  const [budgetWarning, setBudgetWarning] = React.useState<string | null>(null);
+  const [budgetExceeded, setBudgetExceeded] = React.useState(false);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<ExpenseFormData>({
+    mode: "onBlur",
+    defaultValues: {
+      title: "",
+      amount: undefined,
+      currency: "INR",
+      paymentMode: "",
+      category: "",
+      icon: "",
+      notes: "",
+      date: new Date(),
+      convertedAmount: undefined,
+    },
+  });
 
   const watchCategory = watch("category");
+  const watchAmount = watch("amount");
+  const watchConvertedAmount = watch("convertedAmount");
+
+  const calculateMonthlyExpense = () => {
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
+
+    return expenses
+      .filter((expense) => {
+        const expenseDate = new Date(expense.date);
+        return (
+          expenseDate.getMonth() === currentMonth &&
+          expenseDate.getFullYear() === currentYear
+        );
+      })
+      .reduce((total, expense) => {
+        const amount = expense.amount;
+        return total + amount;
+      }, 0);
+  };
+
+  const monthlyExpense = calculateMonthlyExpense();
+  const expenseBudgetLeft = 15000 - monthlyExpense;
 
   // updading icon when category change
   React.useEffect(() => {
@@ -111,6 +143,10 @@ const AddExpense: React.FC = () => {
   }, [selectedDate, setValue]);
 
   const onSubmit = async (data: ExpenseFormData) => {
+    if (monthlyExpense > 15000) {
+      toast.error("Your monthly expenses limit has exceeded");
+      return;
+    }
     try {
       const expenseData = {
         ...data,
@@ -129,6 +165,8 @@ const AddExpense: React.FC = () => {
       setSelectedCurrency("INR");
       setShowCustomCategory(false);
       setCustomCategory("");
+      setBudgetWarning(null);
+      setBudgetExceeded(false);
       toast.success("expense added successfully!");
     } catch (error) {
       toast.error("failed to add expense. please try again.");
@@ -155,7 +193,48 @@ const AddExpense: React.FC = () => {
       setCustomCategory("");
     }
   };
+  const onError = (errors: any) => {
+    const firstError = Object.values(errors)[0] as any;
+    if (firstError?.message) {
+      toast.error(firstError.message);
+    } else {
+      toast.error("Please fill in all required fields correctly.");
+    }
+  };
 
+  React.useEffect(() => {
+    // const currentAmount = shouldShowConversion
+    //   ? watchConvertedAmount || 0
+    //   : watchAmount || 0;
+    const currentAmount = watchAmount || 0;
+    if (currentAmount > 0) {
+      if (currentAmount > expenseBudgetLeft) {
+        setBudgetExceeded(true);
+        setBudgetWarning(
+          `Expense is exceeding expense budget. Try spending less and decrease the amount by ₹${new Intl.NumberFormat("en-IN").format(currentAmount - expenseBudgetLeft)}`
+        );
+        toast.error(
+          "Expense is exceeding expense budget. Try spending less and decrease the amount."
+        );
+      } else if (currentAmount > expenseBudgetLeft * 0.8) {
+        setBudgetExceeded(false);
+        setBudgetWarning(
+          `Warning: Only ₹${new Intl.NumberFormat("en-IN").format(expenseBudgetLeft - currentAmount)} left in your monthly budget`
+        );
+      } else {
+        setBudgetExceeded(false);
+        setBudgetWarning(null);
+      }
+    } else {
+      setBudgetExceeded(false);
+      setBudgetWarning(null);
+    }
+  }, [
+    watchAmount,
+    watchConvertedAmount,
+    expenseBudgetLeft,
+    shouldShowConversion,
+  ]);
   return (
     <Dialog open={isAddModalOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
@@ -163,14 +242,24 @@ const AddExpense: React.FC = () => {
           <DialogTitle>Add New Expense</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit, onError)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="title">Title</Label>
             <Input
               id="title"
               placeholder="Enter expense title"
-              {...register("title", { required: true })}
+              {...register("title", {
+                required: "Title is required",
+                minLength: {
+                  value: 2,
+                  message: "Title must be at least 2 characters",
+                },
+              })}
+              className={errors.title ? "border-red-500" : ""}
             />
+            {errors.title && (
+              <p className="text-sm text-red-600">{errors.title.message}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -181,30 +270,79 @@ const AddExpense: React.FC = () => {
               placeholder="Enter amount"
               step="0.01"
               min="0"
-              {...register("amount", { required: true, min: 0 })}
+              {...register("amount", {
+                required: "Amount is required",
+                min: {
+                  value: 0.01,
+                  message: "Amount must be greater than 0",
+                },
+                validate: (value) => {
+                  if (isNaN(Number(value)))
+                    return "Please enter a valid number";
+                  return true;
+                },
+              })}
+              className={errors.amount ? "border-red-500" : ""}
             />
+            {errors.amount && (
+              <p className="text-sm text-red-600">{errors.amount.message}</p>
+            )}
           </div>
-
+          <div className="mt-2 p-3 bg-gray-50 rounded-md">
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-gray-600">Monthly Budget:</span>
+              <span className="font-medium">₹15,000</span>
+            </div>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-gray-600">Spent This Month:</span>
+              <span className="font-medium">
+                ₹{new Intl.NumberFormat("en-IN").format(monthlyExpense)}
+              </span>
+            </div>
+            <div className="flex justify-between items-center text-sm border-t pt-2 mt-2">
+              <span className="text-gray-600">Budget Remaining:</span>
+              <span
+                className={`font-medium ${expenseBudgetLeft < 1000 ? "text-red-600" : "text-green-600"}`}
+              >
+                ₹
+                {new Intl.NumberFormat("en-IN").format(
+                  Math.max(0, expenseBudgetLeft)
+                )}
+              </span>
+            </div>
+          </div>
           {shouldShowConversion && (
             <div className="space-y-2">
-              <Label htmlFor="convertedAmount">Amount in INR</Label>
+              <Label htmlFor="convertedAmount">
+                Amount in {selectedCurrency}
+              </Label>
               <Input
                 id="convertedAmount"
                 type="number"
-                placeholder={`Enter amount in INR`}
+                placeholder="Enter amount "
                 step="0.01"
                 min="0"
                 {...register("convertedAmount", {
-                  required: shouldShowConversion,
-                  min: 0,
+                  required: shouldShowConversion
+                    ? "Converted amount is required"
+                    : false,
+                  min: {
+                    value: 0.01,
+                    message: "Converted amount must be greater than 0",
+                  },
                 })}
+                className={errors.convertedAmount ? "border-red-500" : ""}
               />
+              {errors.convertedAmount && (
+                <p className="text-sm text-red-600">
+                  {errors.convertedAmount.message}
+                </p>
+              )}
               <p className="text-xs text-gray-500">
-                Convert {selectedCurrency} amount to INR manually
+                convert {selectedCurrency} amount to INR manually
               </p>
             </div>
           )}
-
           <div className="space-y-2">
             <Label>Currency</Label>
             <Tabs
@@ -230,9 +368,15 @@ const AddExpense: React.FC = () => {
 
           <div className="space-y-2">
             <Label>Category</Label>
-            {/* <Select onValueChange={(value) => setValue("category", value)}> */}
-            <Select onValueChange={handleCategoryChange}>
-              <SelectTrigger>
+            <Select
+              onValueChange={handleCategoryChange}
+              {...register("category", {
+                required: "Please select a category",
+              })}
+            >
+              <SelectTrigger
+                className={errors.category ? "border-red-500" : ""}
+              >
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
               <SelectContent>
@@ -246,6 +390,9 @@ const AddExpense: React.FC = () => {
                 ))}
               </SelectContent>
             </Select>
+            {errors.category && (
+              <p className="text-sm text-red-600">{errors.category.message}</p>
+            )}
           </div>
           {showCustomCategory && (
             <div className="mt-2 space-y-2">
@@ -255,13 +402,23 @@ const AddExpense: React.FC = () => {
                 placeholder="Enter custom category name"
                 value={customCategory}
                 {...register("category", {
-                  required: true,
+                  required: "Custom category name is required",
+                  minLength: {
+                    value: 2,
+                    message: "Category name must be at least 2 characters",
+                  },
                   onChange: (e) => {
                     setCustomCategory(e.target.value);
                     setValue("category", e.target.value);
                   },
                 })}
+                className={errors.category ? "border-red-500" : ""}
               />
+              {errors.category && (
+                <p className="text-sm text-red-600">
+                  {errors.category.message}
+                </p>
+              )}
               <p className="text-xs text-gray-500">
                 Enter a name for your custom category
               </p>
@@ -307,8 +464,19 @@ const AddExpense: React.FC = () => {
             <Button type="button" variant="outline" onClick={handleClose}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Adding..." : "Add Expense"}
+            <Button
+              type="submit"
+              disabled={isLoading || isSubmitting}
+              className="min-w-[100px]"
+            >
+              {isLoading || isSubmitting ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Adding...
+                </div>
+              ) : (
+                "Add Expense"
+              )}
             </Button>
           </div>
         </form>

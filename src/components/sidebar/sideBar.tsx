@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { LayoutDashboard } from "lucide-react";
+import { IndianRupee, LayoutDashboard } from "lucide-react";
 interface NavBarProps {}
 
 function SideBar({}: NavBarProps) {
@@ -11,7 +11,7 @@ function SideBar({}: NavBarProps) {
           className="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 [&.active]:bg-blue-600 [&.active]:text-white"
         >
           <span>
-            <LayoutDashboard />
+            <LayoutDashboard size={18} />
           </span>
           <span>Dashboard</span>
         </Link>
@@ -28,7 +28,10 @@ function SideBar({}: NavBarProps) {
           to="/expense"
           className="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 [&.active]:bg-blue-600 [&.active]:text-white"
         >
-          <span>💸</span>
+          <span>
+            {" "}
+            <IndianRupee size={16} />
+          </span>
           <span>Expense</span>
         </Link>
       </section>

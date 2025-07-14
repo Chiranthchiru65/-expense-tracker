@@ -149,7 +149,7 @@ const Table: React.FunctionComponent<TableProps> = ({ expenses }) => {
         const value = info.getValue();
         return (
           <div className="font-medium text-gray-700">
-            {value ? `₹${new Intl.NumberFormat("en-IN").format(value)}` : "-"}
+            {value ? `${new Intl.NumberFormat("en-IN").format(value)}` : "-"}
           </div>
         );
       },

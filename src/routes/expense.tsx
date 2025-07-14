@@ -2,16 +2,7 @@ import { Button } from "@/components/ui/button";
 import useExpenseStore from "@/store/expenseStore";
 import { createFileRoute } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight, Download } from "lucide-react";
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
+
 import Table from "@/components/table/table";
 import { useEffect } from "react";
 import React from "react";
@@ -19,7 +10,7 @@ export const Route = createFileRoute("/expense")({
   component: () => <Expense />,
 });
 function Expense() {
-  const { expenses, fetchExpenses, openAddModal } = useExpenseStore();
+  const { expenses, fetchExpenses } = useExpenseStore();
 
   const [currentMonth, setCurrentMonth] = React.useState(new Date());
   const today = new Date();
@@ -66,34 +57,6 @@ function Expense() {
           <div className="flex justify-between items-center ">
             <h1 className="text-xl font-bold ">All Expenses</h1>
             <div className="flex gap-4">
-              <Drawer>
-                <Button>
-                  <DrawerTrigger>Open</DrawerTrigger>
-                </Button>
-                <DrawerContent>
-                  <DrawerHeader>
-                    <DrawerTitle>Are you absolutely sure?</DrawerTitle>
-                    <DrawerTitle>Are you absolutely sure?</DrawerTitle>
-                    <DrawerTitle>Are you absolutely sure?</DrawerTitle>
-                    <DrawerTitle>Are you absolutely sure?</DrawerTitle>
-                    <DrawerDescription>
-                      This action cannot be undone.
-                    </DrawerDescription>
-                    <DrawerDescription>
-                      This action cannot be undone.
-                    </DrawerDescription>
-                    <DrawerDescription>
-                      This action cannot be undone.
-                    </DrawerDescription>
-                  </DrawerHeader>
-                  <DrawerFooter>
-                    <Button>Submit</Button>
-                    <DrawerClose>
-                      <Button variant="outline">Cancel</Button>
-                    </DrawerClose>
-                  </DrawerFooter>
-                </DrawerContent>
-              </Drawer>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <Button
