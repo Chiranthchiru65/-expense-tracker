@@ -1,4 +1,3 @@
-// components/charts/DailyExpenseChart.tsx
 import React from "react";
 import {
   Line,
@@ -118,7 +117,7 @@ const DailyExpenseChart: React.FC<DailyExpenseChartProps> = ({
             axisLine={false}
             tickLine={false}
             tick={{ fontSize: 12, fill: "#666" }}
-            interval={Math.ceil(data.length / 10)} // Show every nth tick to avoid crowding
+            interval={Math.ceil(data.length / 10)}
           />
           <YAxis
             axisLine={false}
