@@ -84,12 +84,13 @@ function NavBar({ title }: NavBarProps) {
       defaultCurrency: loadedSettings.defaultCurrency,
     });
   }, [reset]);
-  const selectedCurrency = watch("defaultCurrency");
+  // const selectedCurrency = watch("defaultCurrency");
   useEffect(() => {
     if (popup) {
       reset({
         monthlyIncome: settings.monthlyIncome,
         monthlyBudget: settings.monthlyBudget,
+        defaultCurrency: settings.defaultCurrency,
       });
     }
   }, [popup, settings, reset]);
@@ -99,7 +100,7 @@ function NavBar({ title }: NavBarProps) {
       const newSettings: Settings = {
         monthlyIncome: Number(data.monthlyIncome),
         monthlyBudget: Number(data.monthlyBudget),
-        defaultCurrency: settings.defaultCurrency ?? "INR",
+        defaultCurrency: data.defaultCurrency,
       };
 
       saveSettings(newSettings);
