@@ -1,6 +1,7 @@
 export interface Settings {
   monthlyIncome: number;
   monthlyBudget: number;
+  defaultCurrency: string;
 }
 
 const SETTINGS_KEY = "expense_tracker_settings";
@@ -8,6 +9,7 @@ const SETTINGS_KEY = "expense_tracker_settings";
 const defaultSettings: Settings = {
   monthlyIncome: 50000,
   monthlyBudget: 15000,
+  defaultCurrency: "INR",
 };
 
 export const getSettings = (): Settings => {

@@ -1,5 +1,5 @@
 import { createRootRoute, Outlet } from "@tanstack/react-router";
-// import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { Toaster } from "sonner";
 import "../../src/index.css";
 import SideBar from "@/components/sidebar/sideBar";
@@ -25,6 +25,7 @@ function RootComponent() {
         </main>
 
         {/* <TanStackRouterDevtools /> */}
+        {import.meta.env.DEV && <TanStackRouterDevtools />}
       </div>
     </>
   );

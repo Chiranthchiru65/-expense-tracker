@@ -411,6 +411,7 @@ const AddExpense: React.FC = () => {
             </div>
 
             {/* right column */}
+
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Category</Label>

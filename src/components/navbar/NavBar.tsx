@@ -30,7 +30,15 @@ import DailyExpenseChart from "../charts/dailyExpenseChart";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   getSettings,
   saveSettings,
@@ -43,6 +51,7 @@ interface NavBarProps {
 interface SettingsFormData {
   monthlyIncome: number;
   monthlyBudget: number;
+  defaultCurrency: string;
 }
 
 function NavBar({ title }: NavBarProps) {
@@ -50,16 +59,19 @@ function NavBar({ title }: NavBarProps) {
   const [popup, setPopup] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [settings, setSettings] = useState<Settings>(getSettings());
+  const [selectedCurrency, setSelectedCurrency] = useState<string>("INR");
 
   const {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<SettingsFormData>({
     defaultValues: {
       monthlyIncome: settings.monthlyIncome,
       monthlyBudget: settings.monthlyBudget,
+      defaultCurrency: settings.defaultCurrency,
     },
   });
 
@@ -69,9 +81,10 @@ function NavBar({ title }: NavBarProps) {
     reset({
       monthlyIncome: loadedSettings.monthlyIncome,
       monthlyBudget: loadedSettings.monthlyBudget,
+      defaultCurrency: loadedSettings.defaultCurrency,
     });
   }, [reset]);
-
+  const selectedCurrency = watch("defaultCurrency");
   useEffect(() => {
     if (popup) {
       reset({
@@ -86,6 +99,7 @@ function NavBar({ title }: NavBarProps) {
       const newSettings: Settings = {
         monthlyIncome: Number(data.monthlyIncome),
         monthlyBudget: Number(data.monthlyBudget),
+        defaultCurrency: settings.defaultCurrency ?? "INR",
       };
 
       saveSettings(newSettings);
@@ -95,8 +109,6 @@ function NavBar({ title }: NavBarProps) {
       setPopup(false);
 
       toast.success("Settings saved successfully!");
-
-      console.log("Settings saved:", newSettings);
     } catch (error) {
       console.error("Error saving settings:", error);
       toast.error("Failed to save settings. Please try again.");
@@ -282,6 +294,25 @@ function NavBar({ title }: NavBarProps) {
                       {errors.monthlyBudget.message}
                     </p>
                   )}
+                </div>
+                <div className="grid gap-3">
+                  <Label htmlFor="monthlyBudget">Select Default Currency</Label>
+                  <Select
+                    value={selectedCurrency}
+                    onValueChange={(value) => setSelectedCurrency(value)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select Default Currency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectLabel>Currencies</SelectLabel>
+                        <SelectItem value="INR">INR</SelectItem>
+                        <SelectItem value="USD">USD</SelectItem>
+                        <SelectItem value="EUR">EUR</SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
