@@ -1,6 +1,24 @@
 import useExpenseStore from "@/store/expenseStore";
 import { Button } from "../ui/button";
-import { ChevronLeft, ChevronRight, Plus, TrendingUp } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  Settings,
+  TrendingUp,
+} from "lucide-react";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Drawer,
   DrawerClose,
@@ -17,6 +35,7 @@ interface NavBarProps {
 
 function NavBar({ title }: NavBarProps) {
   const { openAddModal, expenses } = useExpenseStore();
+  const [popup, setPopup] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(new Date());
 
   const monthName = selectedMonth.toLocaleDateString("en-US", {
@@ -109,6 +128,39 @@ function NavBar({ title }: NavBarProps) {
           <Plus className="mr-2 h-4 w-4" />
           Add Expense
         </Button>
+        <Dialog open={popup} onOpenChange={setPopup}>
+          <form>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Settings />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Edit profile</DialogTitle>
+                <DialogDescription>
+                  Make changes to your monthly income & budget here. done.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4">
+                <div className="grid gap-3">
+                  <Label htmlFor="name-1">Monthly Income</Label>
+                  <Input defaultValue="Enter amount" />
+                </div>
+                <div className="grid gap-3">
+                  <Label htmlFor="username-1">Monthly Budget</Label>
+                  <Input defaultValue="Enter your budget" />
+                </div>
+              </div>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button variant="outline">Cancel</Button>
+                </DialogClose>
+                <Button type="submit">Save changes</Button>
+              </DialogFooter>
+            </DialogContent>
+          </form>
+        </Dialog>
       </div>
     </nav>
   );

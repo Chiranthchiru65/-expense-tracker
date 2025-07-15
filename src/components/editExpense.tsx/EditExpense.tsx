@@ -79,15 +79,32 @@ const EditExpense: React.FC<EditExpenseProps> = ({
 
   const shouldShowConversion = selectedCurrency !== "INR";
 
-  const { register, handleSubmit, reset, setValue, watch } =
-    useForm<ExpenseFormData>();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<ExpenseFormData>({
+    mode: "onBlur",
+    defaultValues: {
+      title: "",
+      amount: undefined,
+      currency: "INR",
+      paymentMode: "",
+      category: "",
+      icon: "",
+      notes: "",
+      date: new Date(),
+      convertedAmount: undefined,
+    },
+  });
 
   const watchCategory = watch("category");
 
-  // Load expense data when modal opens
   React.useEffect(() => {
     if (expense && isOpen) {
-      // Populate form with existing expense data
       setValue("title", expense.title);
       setValue("amount", expense.amount);
       setValue("currency", expense.currency);
@@ -97,13 +114,11 @@ const EditExpense: React.FC<EditExpenseProps> = ({
       setValue("notes", expense.notes);
       setValue("convertedAmount", expense.convertedAmount);
 
-      // Set dates and currency
       const expenseDate = new Date(expense.date);
       setSelectedDate(expenseDate);
       setValue("date", expenseDate);
       setSelectedCurrency(expense.currency);
 
-      // Handle custom category
       const isCustomCategory = !categories.find(
         (cat) => cat.value === expense.category
       );
@@ -114,7 +129,6 @@ const EditExpense: React.FC<EditExpenseProps> = ({
     }
   }, [expense, isOpen, setValue]);
 
-  // Icon update effect
   React.useEffect(() => {
     const selectedCategoryData = categories.find(
       (cat) => cat.value === watchCategory
@@ -127,12 +141,10 @@ const EditExpense: React.FC<EditExpenseProps> = ({
     }
   }, [watchCategory, setValue, showCustomCategory, customCategory]);
 
-  // Currency update effect
   React.useEffect(() => {
     setValue("currency", selectedCurrency);
   }, [selectedCurrency, setValue]);
 
-  // Date update effect
   React.useEffect(() => {
     setValue("date", selectedDate);
   }, [selectedDate, setValue]);
@@ -171,6 +183,15 @@ const EditExpense: React.FC<EditExpenseProps> = ({
     }
   };
 
+  const onError = (errors: any) => {
+    const firstError = Object.values(errors)[0] as any;
+    if (firstError?.message) {
+      toast.error(firstError.message);
+    } else {
+      toast.error("Please fill in all required fields correctly.");
+    }
+  };
+
   const handleClose = () => {
     reset();
     setSelectedDate(new Date());
@@ -184,157 +205,287 @@ const EditExpense: React.FC<EditExpenseProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Expense</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">
+            Edit Expense
+          </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* Title Field */}
-          <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
-            <Input
-              id="title"
-              placeholder="Enter expense title"
-              {...register("title", { required: true })}
-            />
-          </div>
-
-          {/* Amount Field */}
-          <div className="space-y-2">
-            <Label htmlFor="amount">Amount</Label>
-            <Input
-              id="amount"
-              type="number"
-              placeholder="Enter amount"
-              step="0.01"
-              min="0"
-              {...register("amount", { required: true, min: 0 })}
-            />
-          </div>
-
-          {/* Conversion Field */}
-          {shouldShowConversion && (
-            <div className="space-y-2">
-              <Label htmlFor="convertedAmount">Amount in INR</Label>
-              <Input
-                id="convertedAmount"
-                type="number"
-                placeholder="Enter amount in INR"
-                step="0.01"
-                min="0"
-                {...register("convertedAmount", {
-                  required: shouldShowConversion,
-                  min: 0,
-                })}
-              />
-              <p className="text-xs text-gray-500">
-                Convert {selectedCurrency} amount to INR manually
-              </p>
-            </div>
-          )}
-
-          {/* Currency Tabs */}
-          <div className="space-y-2">
-            <Label>Currency</Label>
-            <Tabs
-              value={selectedCurrency}
-              onValueChange={(value) => setSelectedCurrency(value as Currency)}
-            >
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="INR">INR (₹)</TabsTrigger>
-                <TabsTrigger value="USD">USD ($)</TabsTrigger>
-                <TabsTrigger value="EUR">EUR (€)</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
-
-          {/* Category Field */}
-          <div className="space-y-2">
-            <Label>Category</Label>
-            <Select
-              value={showCustomCategory ? "Others" : watchCategory}
-              onValueChange={handleCategoryChange}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a category" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((category) => (
-                  <SelectItem key={category.value} value={category.value}>
-                    <div className="flex items-center space-x-2">
-                      <span>{category.icon}</span>
-                      <span>{category.label}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {showCustomCategory && (
-              <div className="mt-2 space-y-2">
-                <Label htmlFor="customCategory">Custom Category</Label>
+        <form onSubmit={handleSubmit(onSubmit, onError)} className="space-y-6">
+          {/* two column layout */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* left column */}
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="title" className="text-sm font-medium">
+                  Title
+                </Label>
                 <Input
-                  id="customCategory"
-                  placeholder="Enter custom category name"
-                  value={customCategory}
-                  {...register("category", {
-                    required: true,
-                    onChange: (e) => {
-                      setCustomCategory(e.target.value);
-                      setValue("category", e.target.value);
+                  id="title"
+                  placeholder="Enter expense title"
+                  {...register("title", {
+                    required: "Title is required",
+                    minLength: {
+                      value: 2,
+                      message: "Title must be at least 2 characters",
                     },
                   })}
+                  className={cn(
+                    "transition-all duration-200",
+                    errors.title
+                      ? "border-red-500 ring-red-100"
+                      : "focus:ring-blue-100"
+                  )}
+                />
+                {errors.title && (
+                  <p className="text-sm text-red-600">{errors.title.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="amount" className="text-sm font-medium">
+                  Amount
+                </Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  placeholder="Enter amount"
+                  step="0.01"
+                  min="0"
+                  {...register("amount", {
+                    required: "Amount is required",
+                    min: {
+                      value: 0.01,
+                      message: "Amount must be greater than 0",
+                    },
+                    validate: (value) => {
+                      if (isNaN(Number(value)))
+                        return "Please enter a valid number";
+                      return true;
+                    },
+                  })}
+                  className={cn(
+                    "transition-all duration-200",
+                    errors.amount
+                      ? "border-red-500 ring-red-100"
+                      : "focus:ring-blue-100"
+                  )}
+                />
+                {errors.amount && (
+                  <p className="text-sm text-red-600">
+                    {errors.amount.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Currency</Label>
+                <Tabs
+                  value={selectedCurrency}
+                  onValueChange={(value) =>
+                    setSelectedCurrency(value as Currency)
+                  }
+                >
+                  <TabsList className="grid w-full grid-cols-3 bg-gray-100">
+                    <TabsTrigger value="INR" className="text-sm">
+                      INR (₹)
+                    </TabsTrigger>
+                    <TabsTrigger value="USD" className="text-sm">
+                      USD ($)
+                    </TabsTrigger>
+                    <TabsTrigger value="EUR" className="text-sm">
+                      EUR (€)
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+
+              {shouldShowConversion && (
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="convertedAmount"
+                    className="text-sm font-medium"
+                  >
+                    Amount in {selectedCurrency}
+                  </Label>
+                  <Input
+                    id="convertedAmount"
+                    type="number"
+                    placeholder="Enter amount"
+                    step="0.01"
+                    min="0"
+                    {...register("convertedAmount", {
+                      required: shouldShowConversion
+                        ? "Converted amount is required"
+                        : false,
+                      min: {
+                        value: 0.01,
+                        message: "Converted amount must be greater than 0",
+                      },
+                    })}
+                    className={cn(
+                      "transition-all duration-200",
+                      errors.convertedAmount
+                        ? "border-red-500 ring-red-100"
+                        : "focus:ring-blue-100"
+                    )}
+                  />
+                  {errors.convertedAmount && (
+                    <p className="text-sm text-red-600">
+                      {errors.convertedAmount.message}
+                    </p>
+                  )}
+                  <p className="text-xs text-gray-500">
+                    Convert {selectedCurrency} amount to INR manually
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* right column */}
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Category</Label>
+                <Select
+                  value={showCustomCategory ? "Others" : watchCategory}
+                  onValueChange={handleCategoryChange}
+                >
+                  <SelectTrigger
+                    className={cn(
+                      "transition-all duration-200",
+                      errors.category
+                        ? "border-red-500 ring-red-100"
+                        : "focus:ring-blue-100"
+                    )}
+                  >
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category.value} value={category.value}>
+                        <div className="flex items-center space-x-2">
+                          <span>{category.icon}</span>
+                          <span>{category.label}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.category && (
+                  <p className="text-sm text-red-600">
+                    {errors.category.message}
+                  </p>
+                )}
+              </div>
+
+              {showCustomCategory && (
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="customCategory"
+                    className="text-sm font-medium"
+                  >
+                    Custom Category
+                  </Label>
+                  <Input
+                    id="customCategory"
+                    placeholder="Enter custom category name"
+                    value={customCategory}
+                    {...register("category", {
+                      required: "Custom category name is required",
+                      minLength: {
+                        value: 2,
+                        message: "Category name must be at least 2 characters",
+                      },
+                      onChange: (e) => {
+                        setCustomCategory(e.target.value);
+                        setValue("category", e.target.value);
+                      },
+                    })}
+                    className={cn(
+                      "transition-all duration-200",
+                      errors.category
+                        ? "border-red-500 ring-red-100"
+                        : "focus:ring-blue-100"
+                    )}
+                  />
+                  {errors.category && (
+                    <p className="text-sm text-red-600">
+                      {errors.category.message}
+                    </p>
+                  )}
+                  <p className="text-xs text-gray-500">
+                    Enter a name for your custom category
+                  </p>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal transition-all duration-200",
+                        !selectedDate && "text-muted-foreground",
+                        "hover:bg-gray-50 focus:ring-blue-100"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {selectedDate
+                        ? format(selectedDate, "PPP")
+                        : "Pick a date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={(date) => date && setSelectedDate(date)}
+                      disabled={(date) => date > new Date()}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="notes" className="text-sm font-medium">
+                  Notes
+                </Label>
+                <Input
+                  id="notes"
+                  placeholder="Add notes (optional)"
+                  {...register("notes")}
+                  className="transition-all duration-200 focus:ring-blue-100"
                 />
               </div>
-            )}
+            </div>
           </div>
 
-          {/* Date Field */}
-          <div className="space-y-2">
-            <Label>Date</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !selectedDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {selectedDate ? format(selectedDate, "PPP") : "Pick a date"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={(date) => date && setSelectedDate(date)}
-                  disabled={(date) => date > new Date()}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          {/* Notes Field */}
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
-            <Input
-              id="notes"
-              placeholder="Add notes (optional)"
-              {...register("notes")}
-            />
-          </div>
-
-          {/* Form Actions */}
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={handleClose}>
+          <div className="flex justify-end space-x-3 pt-4 border-t">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleClose}
+              className="px-6 hover:bg-gray-50"
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Updating..." : "Update Expense"}
+            <Button
+              type="submit"
+              disabled={isLoading || isSubmitting}
+              className="px-6 bg-green-600 hover:bg-green-700 min-w-[120px]"
+            >
+              {isLoading || isSubmitting ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Updating...
+                </div>
+              ) : (
+                "Update Expense"
+              )}
             </Button>
           </div>
         </form>

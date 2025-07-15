@@ -2,10 +2,11 @@ import { Button } from "@/components/ui/button";
 import useExpenseStore from "@/store/expenseStore";
 import { createFileRoute } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight, Download } from "lucide-react";
-
+import { exportExpensesToExcel } from "@/utils/excelReport";
 import Table from "@/components/table/table";
 import { useEffect } from "react";
 import React from "react";
+import { toast } from "sonner";
 export const Route = createFileRoute("/expense")({
   component: () => <Expense />,
 });
@@ -49,7 +50,24 @@ function Expense() {
   useEffect(() => {
     fetchExpenses();
   }, [fetchExpenses]);
+  const handleDownloadExcel = () => {
+    console.log("Download button clicked");
 
+    if (expenses.length === 0) {
+      toast.error("No expenses to download");
+      return;
+    }
+
+    try {
+      console.log("Starting Excel export...");
+      exportExpensesToExcel(expenses, "my_expenses");
+      toast.success("Excel file downloaded successfully!");
+      console.log("Excel export completed");
+    } catch (error) {
+      console.error("Excel export failed:", error);
+      toast.error("Failed to download Excel file");
+    }
+  };
   return (
     <>
       <div>
@@ -88,7 +106,7 @@ function Expense() {
                   </Button>
                 </div>
               </div>
-              <Button variant="outline" onClick={() => {}}>
+              <Button variant="outline" onClick={handleDownloadExcel}>
                 <span>
                   <Download />
                 </span>

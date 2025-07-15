@@ -16,16 +16,7 @@ function RootComponent() {
       <div className="min-h-screen bg-gray-100 flex">
         <SideBar />
         <AddExpense />
-        {/* <Toaster
-          position="top-center"
-          toastOptions={{
-            duration: 3000,
-            style: {
-              background: "#363636",
-              color: "#fff",
-            },
-          }}
-        /> */}
+
         <Toaster position="top-center" richColors />
         <main className="flex-1">
           <div className="p-4">

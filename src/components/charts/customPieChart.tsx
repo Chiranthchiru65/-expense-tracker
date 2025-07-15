@@ -21,7 +21,7 @@ interface CustomPieChartProps {
   colors: string[];
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
@@ -86,7 +86,7 @@ const CustomPieChart: React.FunctionComponent<CustomPieChartProps> = ({
             dataKey="amount"
             nameKey="name"
             cx="50%"
-            cy="45%"
+            cy="47%"
             outerRadius={90}
             innerRadius={60}
             labelLine={false}

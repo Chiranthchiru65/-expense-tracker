@@ -47,26 +47,25 @@ const RecentTransactions: React.FC<RecentTransactionProps> = ({
     return `${day}${suffix} ${month} ${year}`;
   };
 
-  const formatAmount = (amount: number, currency: Currency): string => {
-    // Define currency symbols for supported currencies
-    const getCurrencySymbol = (currencyCode: Currency): string => {
-      switch (currencyCode) {
-        case "INR":
-          return "₹";
-        case "USD":
-          return "$";
-        case "EUR":
-          return "€";
-        default:
-          return currencyCode; // fallback to currency code
-      }
-    };
+  // const formatAmount = (amount: number, currency: Currency): string => {
+  //   const getCurrencySymbol = (currencyCode: Currency): string => {
+  //     switch (currencyCode) {
+  //       case "INR":
+  //         return "₹";
+  //       case "USD":
+  //         return "$";
+  //       case "EUR":
+  //         return "€";
+  //       default:
+  //         return currencyCode;
+  //     }
+  //   };
 
-    const currencySymbol = getCurrencySymbol(currency);
-    const formattedNumber = amount.toLocaleString();
+  //   const currencySymbol = getCurrencySymbol(currency);
+  //   const formattedNumber = amount.toLocaleString();
 
-    return `${currencySymbol}${formattedNumber}`;
-  };
+  //   return `${currencySymbol}${formattedNumber}`;
+  // };
 
   return (
     <div className="bg-white rounded-lg shadow-sm border w-1/2 flex flex-col max-h-[30rem]">
@@ -110,11 +109,8 @@ const RecentTransactions: React.FC<RecentTransactionProps> = ({
                 <div className="text-right">
                   <div className="flex items-center space-x-1 bg-red-100 py-2 px-3 rounded-md">
                     <span className="text-sm font-medium text-red-600">
-                      -{" "}
-                      {formatAmount(
-                        transaction.convertedAmount || transaction.amount,
-                        transaction.currency
-                      )}
+                      {/* - {formatAmount(transaction.amount, transaction.currency)} */}
+                      ₹ {transaction.amount}
                       {/* {transaction.currency} */}
                     </span>
                     <TrendingDown className="w-4 h-4 text-red-500" />

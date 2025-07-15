@@ -79,14 +79,15 @@ const Table: React.FunctionComponent<TableProps> = ({ expenses }) => {
   const columns = [
     columnHelper.accessor("title", {
       header: ({ column }) => (
-        <Button
-          variant="ghost"
+        <button
+          // variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="h-auto p-0 font-semibold"
+          // className="h-auto p-0 font-semibold"
+          className="flex items-center pl-4 cursor-pointer"
         >
           Title
           <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
+        </button>
       ),
       cell: (info) => (
         <div className="flex items-center gap-3">
@@ -104,14 +105,15 @@ const Table: React.FunctionComponent<TableProps> = ({ expenses }) => {
     }),
     columnHelper.accessor("amount", {
       header: ({ column }) => (
-        <Button
-          variant="ghost"
+        <button
+          // variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="h-auto p-0 font-semibold"
+          // className="h-auto p-0 font-semibold"
+          className="flex items-center cursor-pointer"
         >
           Amount
           <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
+        </button>
       ),
       cell: (info) => (
         <div className="font-medium text-gray-900">
@@ -136,14 +138,14 @@ const Table: React.FunctionComponent<TableProps> = ({ expenses }) => {
     }),
     columnHelper.accessor("convertedAmount", {
       header: ({ column }) => (
-        <Button
-          variant="ghost"
+        <button
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="h-auto p-0 font-semibold"
+          // className="h-auto p-0 font-semibold"
+          className="flex items-center cursor-pointer "
         >
           convt-Amt
           <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
+        </button>
       ),
       cell: (info) => {
         const value = info.getValue();
@@ -167,14 +169,15 @@ const Table: React.FunctionComponent<TableProps> = ({ expenses }) => {
     }),
     columnHelper.accessor("date", {
       header: ({ column }) => (
-        <Button
-          variant="ghost"
+        <button
+          // variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="h-auto p-0 font-semibold"
+          // className="h-auto p-0 font-semibold"
+          className="flex items-center cursor-pointer"
         >
           Date
           <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
+        </button>
       ),
       cell: (info) => {
         const date = new Date(info.getValue());
@@ -200,7 +203,7 @@ const Table: React.FunctionComponent<TableProps> = ({ expenses }) => {
             variant="ghost"
             size="sm"
             onClick={() => handleEdit(info.row.original)}
-            className="h-8 w-8 p-0 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+            className="h-8 w-8 p-0 text-blue-600 hover:text-blue-800 hover:bg-blue-50 cursor-pointer"
           >
             <Edit className="h-4 w-4" />
           </Button>
@@ -208,7 +211,7 @@ const Table: React.FunctionComponent<TableProps> = ({ expenses }) => {
             variant="ghost"
             size="sm"
             onClick={() => handleDeleteClick(info.row.original)}
-            className="h-8 w-8 p-0 text-red-600 hover:text-red-800 hover:bg-red-50"
+            className="h-8 w-8 p-0 text-red-600 hover:text-red-800 hover:bg-red-50 cursor-pointer"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -230,21 +233,21 @@ const Table: React.FunctionComponent<TableProps> = ({ expenses }) => {
   return (
     <div className="">
       <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-        <table className="">
+        <table className="w-full">
           <thead className="bg-gray-50/50">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id} className="border-b border-gray-200">
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
-                    className={` py-4 text-center text-sm font-medium text-gray-900 ${
+                    className={` py-4 px-2  text-left text-sm font-medium text-gray-900 ${
                       header.id === "title"
-                        ? "w-1/3 min-w-[275px]"
+                        ? " min-w-[255px] "
                         : header.id === "actions"
-                          ? "w-22"
+                          ? "w-26"
                           : header.id === "currency"
-                            ? "w-18"
-                            : "w-28"
+                            ? "w-26"
+                            : "w-32"
                     }`}
                   >
                     {header.isPlaceholder
@@ -275,7 +278,7 @@ const Table: React.FunctionComponent<TableProps> = ({ expenses }) => {
                   className="hover:bg-gray-50/50 transition-colors duration-150"
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="px-6 py-4 text-sm">
+                    <td key={cell.id} className="px-4 py-4 text-sm">
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
