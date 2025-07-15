@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
   Dialog,
@@ -28,6 +28,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import useExpenseStore from "@/store/expenseStore";
 import { toast } from "sonner";
+import { getSettings } from "@/services/settingsStorage";
 
 type Currency = "INR" | "USD" | "EUR";
 
@@ -66,7 +67,7 @@ const AddExpense: React.FC = () => {
   const [selectedDate, setSelectedDate] = React.useState<Date>(new Date());
   const [selectedCurrency, setSelectedCurrency] =
     React.useState<Currency>("INR");
-
+  const [settings, setSettings] = useState(getSettings());
   const [showCustomCategory, setShowCustomCategory] = React.useState(false);
   const [customCategory, setCustomCategory] = React.useState("");
   const shouldShowConversion = selectedCurrency !== "INR";
@@ -117,9 +118,19 @@ const AddExpense: React.FC = () => {
       }, 0);
   };
 
+  const MONTHLY_BUDGET = settings.monthlyBudget;
   const monthlyExpense = calculateMonthlyExpense();
-  const expenseBudgetLeft = 15000 - monthlyExpense;
+  const expenseBudgetLeft = MONTHLY_BUDGET - monthlyExpense;
+  useEffect(() => {
+    const handleSettingsChange = () => {
+      setSettings(getSettings());
+    };
 
+    window.addEventListener("settingsChanged", handleSettingsChange);
+
+    return () =>
+      window.removeEventListener("settingsChanged", handleSettingsChange);
+  }, []);
   // updading icon when category change
   React.useEffect(() => {
     const selectedCategoryData = categories.find(

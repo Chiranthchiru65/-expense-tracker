@@ -50,19 +50,15 @@ function Expense() {
   useEffect(() => {
     fetchExpenses();
   }, [fetchExpenses]);
-  const handleDownloadExcel = () => {
-    console.log("Download button clicked");
 
+  const handleDownloadExcel = () => {
     if (expenses.length === 0) {
-      toast.error("No expenses to download");
+      toast.error("no expenses to download");
       return;
     }
-
     try {
-      console.log("Starting Excel export...");
       exportExpensesToExcel(expenses, "my_expenses");
       toast.success("Excel file downloaded successfully!");
-      console.log("Excel export completed");
     } catch (error) {
       console.error("Excel export failed:", error);
       toast.error("Failed to download Excel file");

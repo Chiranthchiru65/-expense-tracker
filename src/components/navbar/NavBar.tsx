@@ -4,7 +4,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Plus,
-  Settings,
+  // Settings,
   TrendingUp,
 } from "lucide-react";
 import {
@@ -27,16 +27,89 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import DailyExpenseChart from "../charts/dailyExpenseChart";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
+import {
+  getSettings,
+  saveSettings,
+  type Settings,
+} from "@/services/settingsStorage";
 interface NavBarProps {
   title: string;
+}
+
+interface SettingsFormData {
+  monthlyIncome: number;
+  monthlyBudget: number;
 }
 
 function NavBar({ title }: NavBarProps) {
   const { openAddModal, expenses } = useExpenseStore();
   const [popup, setPopup] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(new Date());
+  const [settings, setSettings] = useState<Settings>(getSettings());
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<SettingsFormData>({
+    defaultValues: {
+      monthlyIncome: settings.monthlyIncome,
+      monthlyBudget: settings.monthlyBudget,
+    },
+  });
+
+  useEffect(() => {
+    const loadedSettings = getSettings();
+    setSettings(loadedSettings);
+    reset({
+      monthlyIncome: loadedSettings.monthlyIncome,
+      monthlyBudget: loadedSettings.monthlyBudget,
+    });
+  }, [reset]);
+
+  useEffect(() => {
+    if (popup) {
+      reset({
+        monthlyIncome: settings.monthlyIncome,
+        monthlyBudget: settings.monthlyBudget,
+      });
+    }
+  }, [popup, settings, reset]);
+
+  const onSubmitSettings = (data: SettingsFormData) => {
+    try {
+      const newSettings: Settings = {
+        monthlyIncome: Number(data.monthlyIncome),
+        monthlyBudget: Number(data.monthlyBudget),
+      };
+
+      saveSettings(newSettings);
+
+      setSettings(newSettings);
+
+      setPopup(false);
+
+      toast.success("Settings saved successfully!");
+
+      console.log("Settings saved:", newSettings);
+    } catch (error) {
+      console.error("Error saving settings:", error);
+      toast.error("Failed to save settings. Please try again.");
+    }
+  };
+
+  const handleCancel = () => {
+    reset({
+      monthlyIncome: settings.monthlyIncome,
+      monthlyBudget: settings.monthlyBudget,
+    });
+    setPopup(false);
+  };
 
   const monthName = selectedMonth.toLocaleDateString("en-US", {
     month: "long",
@@ -128,38 +201,111 @@ function NavBar({ title }: NavBarProps) {
           <Plus className="mr-2 h-4 w-4" />
           Add Expense
         </Button>
+
         <Dialog open={popup} onOpenChange={setPopup}>
-          <form>
-            <DialogTrigger asChild>
-              <Button variant="outline">
-                <Settings />
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+          <DialogTrigger asChild>
+            <Button variant="outline">
+              {/* <Settings /> */}{" "}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                // class="lucide lucide-settings-icon lucide-settings"
+              >
+                <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <form onSubmit={handleSubmit(onSubmitSettings)}>
               <DialogHeader>
-                <DialogTitle>Edit profile</DialogTitle>
+                <DialogTitle>Financial Settings</DialogTitle>
                 <DialogDescription>
-                  Make changes to your monthly income & budget here. done.
+                  Update your monthly income and budget. These settings will be
+                  saved locally.
                 </DialogDescription>
               </DialogHeader>
-              <div className="grid gap-4">
+
+              <div className="grid gap-4 py-4">
                 <div className="grid gap-3">
-                  <Label htmlFor="name-1">Monthly Income</Label>
-                  <Input defaultValue="Enter amount" />
+                  <Label htmlFor="monthlyIncome">Monthly Income (₹)</Label>
+                  <Input
+                    id="monthlyIncome"
+                    type="number"
+                    min="0"
+                    step="1000"
+                    placeholder="Enter your monthly income"
+                    {...register("monthlyIncome", {
+                      required: "Monthly income is required",
+                      min: {
+                        value: 0,
+                        message: "Income must be a positive number",
+                      },
+                      valueAsNumber: true,
+                    })}
+                    className={errors.monthlyIncome ? "border-red-500" : ""}
+                  />
+                  {errors.monthlyIncome && (
+                    <p className="text-sm text-red-600">
+                      {errors.monthlyIncome.message}
+                    </p>
+                  )}
                 </div>
+
                 <div className="grid gap-3">
-                  <Label htmlFor="username-1">Monthly Budget</Label>
-                  <Input defaultValue="Enter your budget" />
+                  <Label htmlFor="monthlyBudget">Monthly Budget (₹)</Label>
+                  <Input
+                    id="monthlyBudget"
+                    type="number"
+                    min="0"
+                    step="1000"
+                    placeholder="Enter your monthly budget"
+                    {...register("monthlyBudget", {
+                      required: "Monthly budget is required",
+                      min: {
+                        value: 0,
+                        message: "Budget must be a positive number",
+                      },
+                      valueAsNumber: true,
+                    })}
+                    className={errors.monthlyBudget ? "border-red-500" : ""}
+                  />
+                  {errors.monthlyBudget && (
+                    <p className="text-sm text-red-600">
+                      {errors.monthlyBudget.message}
+                    </p>
+                  )}
                 </div>
               </div>
+
               <DialogFooter>
-                <DialogClose asChild>
-                  <Button variant="outline">Cancel</Button>
-                </DialogClose>
-                <Button type="submit">Save changes</Button>
+                <Button type="button" variant="outline" onClick={handleCancel}>
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="min-w-[100px]"
+                >
+                  {isSubmitting ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Saving...
+                    </div>
+                  ) : (
+                    "Save Changes"
+                  )}
+                </Button>
               </DialogFooter>
-            </DialogContent>
-          </form>
+            </form>
+          </DialogContent>
         </Dialog>
       </div>
     </nav>

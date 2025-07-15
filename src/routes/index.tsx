@@ -4,12 +4,17 @@ import { useEffect, useState } from "react";
 import CustomPieChart from "@/components/charts/customPieChart";
 import useExpenseStore from "@/store/expenseStore";
 import MonthlyCard from "@/components/monthlyCard/monthlyCard";
+import { getSettings } from "@/services/settingsStorage";
 
 export const Route = createFileRoute("/")({
   component: DashboardHome,
 });
 function DashboardHome() {
   const { expenses, fetchExpenses } = useExpenseStore();
+  const [settings, setSettings] = useState(getSettings());
+
+  const monthlyIncome = settings.monthlyIncome;
+  const monthlyBudget = settings.monthlyBudget;
 
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const filteredExpenses = expenses.filter((expense) => {
@@ -19,8 +24,19 @@ function DashboardHome() {
       expenseDate.getFullYear() === currentMonth.getFullYear()
     );
   });
-  const monthlyIncome = 50000;
-  const monthlyBudget = 15000;
+  // const monthlyIncome = 50000;
+  // const monthlyBudget = 15000;
+
+  useEffect(() => {
+    const handleSettingsChange = () => {
+      setSettings(getSettings());
+    };
+
+    window.addEventListener("settingsChanged", handleSettingsChange);
+
+    return () =>
+      window.removeEventListener("settingsChanged", handleSettingsChange);
+  }, []);
 
   const calculateMonthlyExpense = () => {
     const currentDate = new Date();
